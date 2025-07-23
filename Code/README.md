@@ -1,73 +1,48 @@
-// Inside the TEE
-struct DNormalizedGraph {
-    int n;  // Number of vertices
-    int d;  // Fixed degree for each vertex
-    OKVS adjacencyLists;  // Stores d neighbors for each vertex
-}
 
-// Initialize OKVS with d-normalized adjacency lists
-function initializeGraph(G, d):
-    for each vertex v in G:
-        realNeighbors = getNeighbors(v)
-        normalizedList = new array of size d
-        
-        // Copy real neighbors
-        for i from 0 to min(realNeighbors.length, d)-1:
-            normalizedList[i] = realNeighbors[i]
-            
-        // Pad with dummy vertices if needed
-        for i from realNeighbors.length to d-1:
-            normalizedList[i] = DUMMY_VERTEX
-            
-        // Store in OKVS with vertex ID as key
-        adjacencyLists.put(v, normalizedList)
+# Code Directory Overview
 
-function obliviousBFS(graph, startVertex):
-    // Initialize data structures
-    queue = new ObliviousQueue()
-    visited = new ObliviousArray(graph.n) // Initialized to false
-    distance = new ObliviousArray(graph.n) // Initialized to INFINITY
-    
-    // Enqueue the start vertex
-    queue.enqueue(startVertex)
-    visited.obliviousWrite(startVertex, true)
-    distance.obliviousWrite(startVertex, 0)
-    
-    while not queue.isEmpty():
-        currentVertex = queue.dequeue()
-        currentDist = distance.obliviousRead(currentVertex)
-        
-        // Get neighbors using OKVS access
-        neighbors = graph.adjacencyLists.obliviousGet(currentVertex)
-        
-        // Process all d neighbors (real and dummy)
-        for i from 0 to graph.d-1:
-            neighbor = neighbors[i]
-            
-            // Skip dummy vertices
-            isDummy = (neighbor == DUMMY_VERTEX)
-            
-            // Oblivious operations regardless of whether vertex is dummy
-            isVisited = visited.obliviousRead(neighbor)
-            shouldProcess = !isDummy && !isVisited
-            
-            // Obliviously update data structures
-            visited.obliviousConditionalWrite(neighbor, true, shouldProcess)
-            distance.obliviousConditionalWrite(neighbor, currentDist + 1, shouldProcess)
-            queue.obliviousConditionalEnqueue(neighbor, shouldProcess)
-    
-    return distance
+This directory contains several Python scripts, each with a specific purpose related to graph algorithms, queue analysis, and plotting. Here is a summary of each file:
 
-function obliviousGet(key):
-    // Access every entry in the store with constant pattern
-    result = null
-    for each k, v in store:
-        // Only actually capture the value when k matches key
-        if k == key:
-            result = v
-    return result
+## 1.py (formerly compact.py)
+- Contains a function to determine the smallest `n` such that after `k` compactions, all vertices are seen (within a small epsilon).
+- Returns the required `n`, final queue size, number of compactions, and convergence status for given parameters.
+- Useful for theoretical queue/compaction analysis in graph algorithms.
 
-function obliviousConditionalWrite(index, newValue, condition):
-    currentValue = this.obliviousRead(index)
-    valueToWrite = condition ? newValue : currentValue
-    this.obliviousWrite(index, valueToWrite)
+## 2.py (formerly count.py)
+- Plots mathematical expressions related to queue size and graph parameters for various values of `d`.
+- Produces both individual and combined plots for different `d` values.
+- Useful for visualizing how queue size and related expressions change with graph parameters.
+
+## 3.py (formerly final.py)
+- Implements a full graph algorithm with a class `GraphAlgorithm`.
+- Handles adjacency matrix creation, queue processing, compaction, and tracks statistics like max queue size and real queue size.
+- Includes a function to generate large, well-connected test graphs.
+- Runs both a small and a large test case, printing detailed statistics and progress.
+
+## 4.py (formerly main.py)
+- Contains a variant of the graph algorithm with a focus on adjacency matrix construction and queue processing.
+- Runs a sample test case and prints the adjacency matrix and algorithm progress.
+- Useful for debugging and understanding the step-by-step operation of the algorithm.
+
+## 5.py (formerly new.py)
+- Contains pseudocode (not executable Python) for oblivious BFS and d-normalized graph representation, suitable for secure computation/TEE settings.
+- Includes functions for oblivious queue and array operations, and OKVS-based adjacency list access.
+- Useful as a reference for implementing oblivious graph algorithms.
+
+## 6.py (formerly plot.py)
+- Provides a 3D plotting tool for the expression `x = v[1-(1-(a/v)^(y-1))] - yn` over ranges of `y` and `n`.
+- Asks for user input for `v` and `e`, computes derived parameters, and visualizes the result as a surface plot.
+- Prints the minimum value and statistics for the computed surface.
+- Useful for visualizing and analyzing the behavior of the compaction/cost function.
+
+## 7.py (formerly prob.py)
+- Analyzes and plots the cost function and minimum delta for various `d` and `n` values.
+- Prints a table of results and produces both individual and combined plots.
+- Useful for understanding the trade-offs in parameter selection for graph/queue algorithms.
+
+---
+
+**Note:**
+- All scripts are self-contained and can be run independently (except 5.py, which is pseudocode/reference).
+- For plotting scripts, ensure you have `matplotlib` and `numpy` installed.
+- For large graph tests, scripts may take time and use significant memory.
